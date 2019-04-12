@@ -1,0 +1,593 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rds.order.mapper.RdsPersonPriceMapper">
+
+    <select id="getUsersId" resultType="com.rds.judicial.model.RdsJudicialKeyValueModel"
+            parameterType="map">
+        SELECT CONCAT(u.username,"(",u.`usercode`,")") AS VALUE,u.userid AS
+        'key' FROM tb_upc_users u WHERE
+        u.usercode!='admin' AND u.delstatus IS
+        NULL
+        <if test="query != null and query != ''">
+            AND u.initials like '%${query}%'
+        </if>
+        <if test="userid != null and userid != ''">
+            AND u.userid = #{userid}
+        </if>
+    </select>
+
+    <select id="getCheckProjectInfoById" resultType="com.rds.judicial.model.RdsJudicialKeyValueModel"
+            parameterType="map">
+        select CONCAT(c.check_project,"(",c.check_type,")") as VALUE,
+        c.cp_id
+        as 'key' from nbl_projectinfo c
+        where 1=1
+        <if test="query != null and query != ''">
+            and c.check_project like '%${query}%'
+        </if>
+        and c.project_status='0'
+    </select>
+
+    <insert id="savePersonPrice" parameterType="com.rds.order.model.RdsPersonpriceConfigureModel">
+		insert into
+		tb_or_personprice_configure
+		(pc_id,con_id
+        <if  test="user_id != null and user_id != ''">
+            ,user_id
+        </if>
+        <if  test="hospital != null and hospital != ''">
+            ,hospital
+        </if>
+        <if  test="discount_type != null and discount_type != ''">
+            ,discount_type
+        </if>
+		,cp_id,balance_type,market_price,cre_person,cre_time)
+		VALUES
+		(#{pc_id},#{con_id}
+        <if  test="user_id != null and user_id != ''">
+            ,#{user_id}
+        </if>
+        <if  test="hospital != null and hospital != ''">
+            ,LTRIM(RTRIM(#{hospital}))
+        </if>
+        <if  test="discount_type != null and discount_type != ''">
+            ,#{discount_type}
+        </if>
+        ,#{cp_id},#{balance_type},#{market_price},#{cre_person},NOW())
+	</insert>
+
+    <select id="getPersonPrice" resultType="com.rds.order.model.RdsPersonpriceConfigureModel"
+            parameterType="map">
+        select c.cp_id,c.check_project,c.check_type,c.project_cancer_species,c.project_status,(
+        SELECT
+        case
+        when count(*)>0
+        then '存在'
+        ELSE '不存在'
+        END
+        from tb_or_personprice_configure p
+        where
+        c.cp_id=p.cp_id and  p.state='0'
+        ) flag
+        from nbl_projectinfo c
+        where 1=1
+        <if test="check_project != null and check_project != ''">
+            AND c.check_project like '%${check_project}%'
+        </if>
+        <if test="check_type != null and check_type != ''">
+            AND c.check_type like '%${check_type}%'
+        </if>
+        <if test="state != null ">
+            AND c.project_status =#{state}
+        </if>
+        ORDER BY c.create_time desc
+        LIMIT
+        #{start},#{limit}
+    </select>
+
+
+    <select id="CountPersonPrice" resultType="int" parameterType="map">
+        select count(*)
+        from nbl_projectinfo c
+        where 1=1
+        <if test="check_project != null and check_project != ''">
+            AND c.check_project like '%${check_project}%'
+        </if>
+        <if test="check_type != null and check_type != ''">
+            AND c.check_type like '%${check_type}%'
+        </if>
+        <if test="state != null ">
+            AND c.project_status =#{state}
+        </if>
+
+    </select>
+
+    <select id="findPersonPrice" resultType="com.rds.order.model.RdsPersonpriceConfigureModel" parameterType="map">
+        select * from tb_or_personprice_configure p
+        where 1=1
+            and p.cp_id = #{cp_id} and p.state='0'
+        <choose>
+            <when test="discount_type != null and discount_type != ''">
+                and p.discount_type != ''
+            </when>
+            <otherwise>
+                and p.discount_type is null
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="balance_type != null and balance_type != ''">
+                and p.balance_type != ''
+            </when>
+            <otherwise>
+                and p.balance_type is null
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="user_id != null and user_id != ''">
+                and p.user_id =#{user_id}
+            </when>
+            <otherwise>
+                and p.user_id is null
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="hospital != null and hospital != ''">
+                and p.hospital =#{hospital}
+            </when>
+            <otherwise>
+                and p.hospital is null
+            </otherwise>
+        </choose>
+    </select>
+
+    <update id="updatePersonPriceByPrice" parameterType="map">
+         update tb_or_personprice_configure p
+         set p.cp_id=#{cp_id}
+        <if test="discount_type != null and discount_type != ''">
+         ,p.discount_type=#{discount_type}
+        </if>
+        <if test="balance_type != null and balance_type != ''">
+         ,p.balance_type=#{balance_type}
+        </if>
+        <if test="user_id != null and user_id != ''">
+         ,p.user_id=#{user_id}
+        </if>
+        <if test="hospital != null and hospital != ''">
+         ,p.hospital=LTRIM(RTRIM(#{hospital}))
+        </if>
+        <if test="market_price != null and market_price != ''">
+         ,p.market_price=#{market_price}
+        </if>
+         where  1=1
+            and p.cp_id = #{cp_id}
+        <choose>
+            <when test="discount_type != null and discount_type != ''">
+                and p.discount_type != ''
+            </when>
+            <otherwise>
+                and p.discount_type is null
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="balance_type != null and balance_type != ''">
+                and p.balance_type != ''
+            </when>
+            <otherwise>
+                and p.balance_type is null
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="user_id != null and user_id != ''">
+                and p.user_id =#{user_id}
+            </when>
+            <otherwise>
+                and p.user_id is null
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="hospital != null and hospital != ''">
+                and p.hospital =#{hospital}
+            </when>
+            <otherwise>
+                and p.hospital is null
+            </otherwise>
+        </choose>
+    </update>
+
+    <select id="getPersonPriceByCpId" resultType="com.rds.order.model.RdsPersonpriceConfigureModel"
+            parameterType="map">
+        select p.*,u.username as username,
+        u1.username as username1 from tb_or_personprice_configure p
+        left join tb_upc_users u
+        on u.userid=p.user_id
+        left join
+        tb_upc_users u1
+        on u1.userid=p.cre_person
+        where p.cp_id=#{cp_id}
+        <if test="username != null and username != ''">
+            AND u.username like '%${username}%'
+        </if>
+        <if test="hospital != null and hospital != ''">
+            AND p.hospital like '%${hospital}%'
+        </if>
+        <if test="discount_type != null and discount_type != ''">
+            AND p.discount_type = #{discount_type}
+        </if>
+        <if test="balance_type != null and balance_type != ''">
+            AND p.balance_type = #{balance_type}
+        </if>
+        <if test="state != null">
+            AND p.state = #{state}
+        </if>
+        <if test="market_price != null and market_price != ''">
+            AND p.market_price like '%${market_price}%'
+        </if>
+        LIMIT
+        #{start},#{limit}
+    </select>
+
+
+    <select id="CountPersonPriceByCpId" resultType="int" parameterType="map">
+        select count(*) from tb_or_personprice_configure p
+        left join tb_upc_users u
+        on u.userid=p.user_id
+        left join
+        tb_upc_users u1
+        on u1.userid=p.cre_person
+        where p.cp_id=#{cp_id}
+        <if test="username != null and username != ''">
+            AND u.username like '%${username}%'
+        </if>
+        <if test="hospital != null and hospital != ''">
+            AND p.hospital like '%${hospital}%'
+        </if>
+        <if test="discount_type != null and discount_type != ''">
+            AND p.discount_type = #{discount_type}
+        </if>
+        <if test="balance_type != null and balance_type != ''">
+            AND p.balance_type = #{balance_type}
+        </if>
+        <if test="state != null ">
+            AND p.state = #{state}
+        </if>
+        <if test="market_price != null and market_price != ''">
+            AND p.market_price like '%${market_price}%'
+        </if>
+
+    </select>
+
+    <update id="deleteContractInfo" parameterType="map">
+		update
+		tb_or_contract set
+		state=1
+		where con_id=#{con_id}
+	</update>
+
+    <update id="deleteCheckProject" parameterType="map">
+		 update nbl_projectinfo p set p.project_status =1
+         where p.cp_id=#{cp_id}
+	</update>
+
+
+
+    <update id="updatePersonPrice" parameterType="map">
+        update tb_or_personprice_configure
+        set
+        user_id=#{user_id},
+        hospital=LTRIM(RTRIM(#{hospital})),
+        market_price=#{market_price},
+        cp_id=#{cp_id}
+        <if test="discount_type != null and discount_type != ''">
+            ,discount_type =#{discount_type}
+        </if>
+        <if test="balance_type != null and balance_type != ''">
+            ,balance_type =#{balance_type}
+        </if>
+        where pc_id=#{pc_id}
+    </update>
+
+    <update id="updatePersonPriceState" parameterType="map" >
+		update
+		tb_or_personprice_configure
+		set state=1
+		where pc_id in
+        <foreach collection="list" item="pc_id" index="index" open="(" separator="," close=")" >
+            #{pc_id}
+        </foreach>
+	</update>
+
+    <update id="updatePersonPriceAndProject" parameterType="map">
+		update
+		tb_or_personprice_configure
+		set cp_id=#{cp_id}
+		where pc_id=#{pc_id}
+	</update>
+
+    <select id="getContractInfo" resultType="com.rds.order.model.RdsContractModel"
+            parameterType="map">
+        select c.*,p.*,u.username,u1.username username1,u2.username username2 from tb_or_contract c
+        left join
+        tb_or_personprice_configure p
+        on p.pc_id=c.pc_id
+        left join tb_upc_users u
+        on u.userid=c.cre_person
+        left join tb_upc_users u1
+        on u1.userid=c.party_b
+        left join tb_upc_users u2
+        on u2.userid=c.agent
+        where 1=1
+        <if test="party_a != null and party_a != ''">
+            and c.party_a like  '%${party_a}%'
+        </if>
+        <if test="party_b != null and party_b != ''">
+            and u1.username like  '%${party_b}%'
+        </if>
+        <if test="agent != null and agent != ''">
+            and u2.username like '%${agent}%'
+        </if>
+        <if test=" take_effect_time_start !=null  and take_effect_time_start != ''">
+            and c.take_effect_time  &gt;= #{take_effect_time_start}
+        </if>
+        <if test=" take_effect_time_end !=null  and take_effect_time_end != ''">
+            and #{take_effect_time_end} &gt;= c.take_effect_time
+        </if>
+        <if test=" fail_time_start !=null  and fail_time_start != ''">
+            and c.fail_time &gt;= #{fail_time_start}
+        </if>
+        <if test=" fail_time_end !=null  and fail_time_end != ''">
+            and #{fail_time_end} &gt;= c.fail_time
+        </if>
+        <if test="state != null  ">
+            and c.state =#{state}
+        </if>
+        order by c.cre_time desc
+        LIMIT
+        #{start},#{limit}
+    </select>
+
+    <select id="CountContractInfo" resultType="int" parameterType="map">
+        select count(1) from tb_or_contract c
+        left join
+        tb_or_personprice_configure p
+        on p.pc_id=c.pc_id
+        left join tb_upc_users u
+        on u.userid=c.cre_person
+        left join tb_upc_users u1
+        on u1.userid=c.party_b
+        left join tb_upc_users u2
+        on u2.userid=c.agent
+        where 1=1
+        <if test="party_a != null and party_a != ''">
+            and c.party_a =#{party_a}
+        </if>
+        <if test="party_b != null and party_b != ''">
+            and c.party_b =#{party_b}
+        </if>
+        <if test="agent != null and agent != ''">
+            and c.agent =#{agent}
+        </if>
+        <if test="fail_time != null and fail_time != ''">
+            and c.fail_time =#{fail_time}
+        </if>
+        <if test=" take_effect_time_start !=null  and take_effect_time_start != ''">
+            and c.take_effect_time &gt;= #{take_effect_time_start}
+        </if>
+        <if test=" take_effect_time_end !=null  and take_effect_time_end != ''">
+            and #{take_effect_time_end} &gt;= c.take_effect_time
+        </if>
+        <if test="state != null ">
+            and c.state =#{state}
+        </if>
+
+    </select>
+
+    <insert id="insertContractInfo" parameterType="com.rds.order.model.RdsContractModel">
+		insert into
+		tb_or_contract
+		(con_id,party_a,party_b,agent,take_effect_time,fail_time,cre_time,cre_person)
+		values(#{con_id},#{party_a},#{party_b},#{agent},#{take_effect_time},#{fail_time},now(),#{cre_person})
+	</insert>
+
+    <update id="updateContractInfo" parameterType="map">
+		update
+		tb_or_contract
+		set con_id=#{con_id},
+		party_a=#{party_a},
+		party_b=#{party_b},
+		agent=#{agent},
+		take_effect_time=#{take_effect_time},
+		fail_time=#{fail_time}
+		where con_id=#{con_id}
+	</update>
+
+    <select id="getPcInfo" resultType="com.rds.order.model.RdsPersonpriceConfigureModel"
+            parameterType="map">
+        select * from tb_or_personprice_configure p
+        where p.state=0
+        <if test="hospital != null and hospital != ''">
+            AND p.hospital like '%${hospital}%'
+        </if>
+        <if test="discount_type != null and discount_type != ''">
+            AND p.discount_type = #{discount_type}
+        </if>
+        <if test="balance_type != null and balance_type != ''">
+            AND p.balance_type = #{balance_type}
+        </if>
+        <if test="market_price != null and market_price != ''">
+            AND p.market_price like '%${market_price}%'
+        </if>
+        LIMIT
+        #{start},#{limit}
+    </select>
+
+    <select id="CountPcInfo" resultType="int" parameterType="map">
+        select count(1) from tb_or_personprice_configure p
+        where p.state=0
+        <if test="hospital != null and hospital != ''">
+            AND p.hospital like '%${hospital}%'
+        </if>
+        <if test="discount_type != null and discount_type != ''">
+            AND p.discount_type = #{discount_type}
+        </if>
+        <if test="balance_type != null and balance_type != ''">
+            AND p.balance_type = #{balance_type}
+        </if>
+        <if test="market_price != null and market_price != ''">
+            AND p.market_price like '%${market_price}%'
+        </if>
+
+    </select>
+
+    <update id="updateContraceToPC" parameterType="map">
+		update
+		tb_or_contract
+		set pc_id=#{pc_id}
+		where con_id=#{con_id}
+	</update>
+
+    <select id="queryAtt" parameterType="map"
+            resultType="com.rds.order.model.RdsOrderAttachmentModel">
+		select a.* from tb_or_contract c
+		inner join tb_or_attachment
+		a
+		on c.con_id=a.con_id
+		where c.con_id=#{con_id}
+		and a.state=0 and
+		a.att_type=2
+	</select>
+
+    <update id="deleteAttInfo" parameterType="com.rds.order.model.RdsOrderAttachmentModel">
+		update tb_or_attachment
+		set
+		state=1 where att_id=#{att_id}
+	</update>
+
+    <insert id="insertAttInfo" parameterType="com.rds.order.model.RdsOrderAttachmentModel">
+		insert into
+		tb_or_attachment
+		(att_id,att_type,att_catalog,upload_time,upload_person,ocp_id,con_id)
+		VALUES(#{att_id},#{att_type},#{att_catalog},now(),#{upload_person},#{ocp_id},#{con_id})
+	</insert>
+
+    <select id="getPathByAttId" parameterType="String" resultType="String">
+		select a.att_catalog from tb_or_attachment a
+		where a.att_id=#{att_id}
+	</select>
+
+    <select id="getContractAndPriceInfo" parameterType="map"
+            resultType="com.rds.order.model.RdsPersonpriceConfigureModel">
+		select *,u.username from tb_or_personprice_configure p
+		left
+		join tb_upc_users
+		u
+		on u.userid=p.user_id
+		where p.con_id=#{con_id}
+		LIMIT
+		#{start},#{limit}
+	</select>
+
+    <select id="CountContractAndPriceInfo" parameterType="map"
+            resultType="int">
+		select count(1) from tb_or_personprice_configure p
+		left join
+		tb_upc_users u
+		on u.userid=p.user_id
+		where
+		p.con_id=#{con_id}
+
+	</select>
+
+    <select id="queryPriceByConId" resultType="com.rds.order.model.RdsPersonpriceConfigureModel"
+            parameterType="map">
+        select p.*,u.username,n.check_project from tb_or_personprice_configure p
+        left join
+        tb_upc_users u
+        on u.userid=p.user_id
+        left join nbl_projectinfo n
+        on n.cp_id=p.cp_id
+        where p.con_id=#{con_id}
+        <if test="username != null and username != ''">
+            AND u.username like '%${username}%'
+        </if>
+        <if test="hospital != null and hospital != ''">
+            AND p.hospital like '%${hospital}%'
+        </if>
+        <if test="discount_type != null and discount_type != ''">
+            AND p.discount_type = #{discount_type}
+        </if>
+        <if test="balance_type != null and balance_type != ''">
+            AND p.balance_type = #{balance_type}
+        </if>
+        <if test="state != null ">
+            AND p.state = #{state}
+        </if>
+        <if test="market_price != null and market_price != ''">
+            AND p.market_price like '%${market_price}%'
+        </if>
+        LIMIT
+        #{start},#{limit}
+    </select>
+
+    <select id="CountPriceByConId" resultType="int" parameterType="map">
+        select count(1) from tb_or_personprice_configure p
+        left join
+        tb_upc_users u
+        on u.userid=p.user_id
+        left join nbl_projectinfo n
+        on n.cp_id=p.cp_id
+        where
+        p.con_id=#{con_id}
+        <if test="username != null and username != ''">
+            AND u.username like '%${username}%'
+        </if>
+        <if test="hospital != null and hospital != ''">
+            AND p.hospital like '%${hospital}%'
+        </if>
+        <if test="discount_type != null and discount_type != ''">
+            AND p.discount_type = #{discount_type}
+        </if>
+        <if test="balance_type != null and balance_type != ''">
+            AND p.balance_type = #{balance_type}
+        </if>
+        <if test="state != null ">
+            AND p.state = #{state}
+        </if>
+        <if test="market_price != null and market_price != ''">
+            AND p.market_price like '%${market_price}%'
+        </if>
+
+    </select>
+
+    <delete id="deletePersonPrice" parameterType="map">
+       delete from tb_or_personprice_configure
+        where
+        con_id=#{con_id} and balance_type=#{balance_type} and market_price=#{market_price}
+        <if  test="username != null and username != ''">
+            and user_id =#{user_id}
+        </if>
+        <if  test="hospital != null and hospital != ''">
+            and hospital =#{hospital}
+        </if>
+        <if  test="discount_type != null and discount_type != ''">
+            and discount_type =#{discount_type}
+        </if>
+    </delete>
+
+    <update id="deletePersonPriceById" parameterType="map">
+        update tb_or_personprice_configure c
+        set c.state='1'
+        where c.con_id=#{con_id}
+    </update>
+
+    <update id="deletePersonPriceByPcId" parameterType="map">
+        update tb_or_personprice_configure c
+        set c.state='1'
+        where c.pc_id=#{pc_id}
+    </update>
+    <update id="deletePersonPriceByPcId2" parameterType="map">
+        update tb_or_personprice_configure c
+        set c.state='1'
+        where c.pc_id=#{pc_id_old}
+    </update>
+
+</mapper>

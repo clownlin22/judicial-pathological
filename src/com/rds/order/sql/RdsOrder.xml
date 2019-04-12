@@ -1,0 +1,584 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rds.order.mapper.RdsOrderMapper">
+
+    <select id="getCaseInfo" parameterType="map"
+            resultType="com.rds.order.model.RdsOrderCaseInfo">
+        select
+        c.*,STR_TO_DATE(c.age,"%Y-%m-%d") as agedate,p.ocp_id,p.cp_id,p.case_type,
+        u.username,u1.areacode,e.check_project,e.check_type,ll.`name` as labname,o.cre_time
+        from
+        tb_or_case_info c
+        left join tb_or_order_check_project p
+        on
+        c.order_id=p.order_id
+        left join tb_upc_users u
+        on
+        u.userid=c.create_person
+        left join tb_or_order o
+        on
+        o.order_id=c.order_id
+        left join tb_upc_users u1
+        on u1.userid=o.user_id
+        left join nbl_projectinfo e
+        on e.cp_id=p.cp_id
+        left join tb_or_laboratory ll on ll.lab_id=p.lab_id
+        where 1=1
+        and o.state='1' and (o.pay_state='1' or  o.pay_state='3' )
+        <if test=" name !=null  and name != ''">
+            and c.name like '%${name}%'
+        </if>
+        <if test=" sex !=null ">
+            and c.sex=#{sex}
+        </if>
+        <if test=" age !=null  and age != ''">
+            and c.age=#{age}
+        </if>
+        <if test=" id_number !=null  and id_number != ''">
+            and c.id_number like '%${id_number}%'
+        </if>
+        <if test=" pathology_number !=null  and pathology_number != ''">
+            and c.pathology_number like '%${pathology_number}%'
+        </if>
+        <if test=" case_illness_number !=null  and case_illness_number != ''">
+            and c.case_illness_number like '%${case_illness_number}%'
+        </if>
+        <if test=" affiliated_hospital !=null  and affiliated_hospital != ''">
+            and c.affiliated_hospital like '%${affiliated_hospital}%'
+        </if>
+        <if test=" hospital_number !=null  and hospital_number != ''">
+            and c.hospital_number like '%${hospital_number}%'
+        </if>
+        <if test=" telephone !=null  and telephone != ''">
+            and c.telephone like '%${telephone}%'
+        </if>
+        <if test=" sickbed_number !=null  and sickbed_number != ''">
+            and c.sickbed_number like '%${sickbed_number}%'
+        </if>
+        <if test=" patient_number !=null  and patient_number != ''">
+            and c.patient_number like '%${patient_number}%'
+        </if>
+        <if test=" outpatient_number !=null  and outpatient_number != ''">
+            and c.outpatient_number like '%${outpatient_number}%'
+        </if>
+        <if test=" marital_status !=null  and marital_status != ''">
+            and c.marital_status=#{marital_status}
+        </if>
+        <if test=" inspection_department !=null  and inspection_department != ''">
+            and c.inspection_department like
+            '%${inspection_department}%'
+        </if>
+        <if test=" inspection_doctor !=null  and inspection_doctor != ''">
+            and c.inspection_doctor like '%${inspection_doctor}%'
+        </if>
+        <if test=" report_doctor !=null  and report_doctor != ''">
+            and c.report_doctor like '%${report_doctor}%'
+        </if>
+        <if test=" create_person !=null  and create_person != ''">
+            and u.username like '%${create_person}%'
+        </if>
+        <if test=" order_id !=null  and order_id != ''">
+            and c.order_id like '%${order_id}%'
+        </if>
+        <if test=" delivery_date_start !=null  and delivery_date_start != ''">
+            and c.delivery_date &gt;= #{delivery_date_start}
+        </if>
+        <if test=" delivery_date_end !=null  and delivery_date_end != ''">
+            and #{delivery_date_end} &gt;= c.delivery_date
+        </if>
+        <if test=" sampling_date_start !=null  and sampling_date_start != ''">
+            and c.sampling_date &gt;= #{sampling_date_start}
+        </if>
+        <if test=" sampling_date_end !=null  and sampling_date_end != ''">
+            and #{sampling_date_end} &gt;= c.sampling_date
+        </if>
+        <if test=" create_date_start !=null  and create_date_start != ''">
+            and c.create_date &gt;= #{create_date_start}
+        </if>
+        <if test=" create_date_end !=null  and create_date_end != ''">
+            and #{create_date_end} &gt;= c.create_date
+        </if>
+        <if test=" state !=null ">
+            and p.case_type =#{state}
+        </if>
+        <if test=" check_project !=null  and check_project != ''">
+            and e.check_project like '%${check_project}%'
+        </if>
+        <if test=" check_type !=null  and check_type != ''">
+            and e.check_type like '%${check_type}%'
+        </if>
+        ORDER BY o.cre_time desc
+        LIMIT
+        #{start},#{limit}
+    </select>
+
+    <select id="countCaseInfo" parameterType="map" resultType="int">
+        select count(1) from
+        tb_or_case_info c
+        left join
+        tb_or_order_check_project p
+        on
+        c.order_id=p.order_id
+        left join
+        tb_upc_users u
+        on
+        u.userid=c.create_person
+        left join tb_or_order o
+        on
+        o.order_id=c.order_id
+        left join tb_upc_users u1
+        on u1.userid=o.user_id
+        left join nbl_projectinfo e
+        on e.cp_id=p.cp_id
+        where 1=1
+        and o.state='1' and (o.pay_state='1' or  o.pay_state='3' )
+        <if test=" name !=null  and name != ''">
+            and c.name like '%${name}%'
+        </if>
+        <if test=" sex !=null ">
+            and c.sex=#{sex}
+        </if>
+        <if test=" age !=null  and age != ''">
+            and c.age=#{age}
+        </if>
+        <if test=" id_number !=null  and id_number != ''">
+            and c.id_number like '%${id_number}%'
+        </if>
+        <if test=" pathology_number !=null  and pathology_number != ''">
+            and c.pathology_number like '%${pathology_number}%'
+        </if>
+        <if test=" case_illness_number !=null  and case_illness_number != ''">
+            and c.case_illness_number like '%${case_illness_number}%'
+        </if>
+        <if test=" affiliated_hospital !=null  and affiliated_hospital != ''">
+            and c.affiliated_hospital like '%${affiliated_hospital}%'
+        </if>
+        <if test=" hospital_number !=null  and hospital_number != ''">
+            and c.hospital_number like '%${hospital_number}%'
+        </if>
+        <if test=" telephone !=null  and telephone != ''">
+            and c.telephone like '%${telephone}%'
+        </if>
+        <if test=" sickbed_number !=null  and sickbed_number != ''">
+            and c.sickbed_number like '%${hospital_number}%'
+        </if>
+        <if test=" patient_number !=null  and patient_number != ''">
+            and c.patient_number like '%${patient_number}%'
+        </if>
+        <if test=" outpatient_number !=null  and outpatient_number != ''">
+            and c.outpatient_number like '%${outpatient_number}%'
+        </if>
+        <if test=" marital_status !=null  and marital_status != ''">
+            and c.marital_status=#{marital_status}
+        </if>
+        <if test=" inspection_department !=null  and inspection_department != ''">
+            and c.inspection_department like
+            '%${inspection_department}%'
+        </if>
+        <if test=" inspection_doctor !=null  and inspection_doctor != ''">
+            and c.inspection_doctor like '%${inspection_doctor}%'
+        </if>
+        <if test=" report_doctor !=null  and report_doctor != ''">
+            and c.report_doctor like '%${report_doctor}%'
+        </if>
+        <if test=" create_person !=null  and create_person != ''">
+            and c.create_person like '%${create_person}%'
+        </if>
+        <if test=" order_id !=null  and order_id != ''">
+            and c.order_id like '%${order_id}%'
+        </if>
+        <if test=" delivery_date_start !=null  and delivery_date_start != ''">
+            and c.delivery_date &gt;= #{delivery_date_start}
+        </if>
+        <if test=" delivery_date_end !=null  and delivery_date_end != ''">
+            and #{delivery_date_end} &gt;= c.delivery_date
+        </if>
+        <if test=" sampling_date_start !=null  and sampling_date_start != ''">
+            and c.sampling_date &gt;= #{sampling_date_start}
+        </if>
+        <if test=" sampling_date_end !=null  and sampling_date_end != ''">
+            and #{sampling_date_end} &gt;= c.sampling_date
+        </if>
+        <if test=" create_date_start !=null  and create_date_start != ''">
+            and c.create_date &gt;= #{create_date_start}
+        </if>
+        <if test=" create_date_end !=null  and create_date_end != ''">
+            and #{create_date_end} &gt;= c.create_date
+        </if>
+        <if test=" state !=null  ">
+            and p.case_type =#{state}
+        </if>
+        <if test=" check_project !=null  and check_project != ''">
+            and e.check_project like '%${check_project}%'
+        </if>
+        <if test=" check_type !=null  and check_type != ''">
+            and e.check_type like '%${check_type}%'
+        </if>
+
+    </select>
+
+    <select id="getSignInfos" parameterType="map"
+            resultType="com.rds.order.model.RdsOrderSignModel">
+        	select s.*,u.username from tb_or_sample_sign s
+            left join tb_upc_users u on u.userid=s.cre_person
+		    where s.ocp_id=#{ocp_id} and s.state=0
+		    ORDER by s.cre_time desc
+    </select>
+
+    <select id="countSignInfos" parameterType="map" resultType="int" >
+        	select count(*) from tb_or_sample_sign s
+            left join tb_upc_users u on u.userid=s.cre_person
+		    where s.ocp_id=#{ocp_id} and s.state=0
+    </select>
+
+    <update id="updateCaseInfo" parameterType="map">
+		update tb_or_case_info
+		set
+		name=#{name},
+		sex=#{sex},
+		age=#{agedate},
+		id_number=#{id_number},
+		pathology_number=#{pathology_number},
+		case_illness_number=#{case_illness_number},
+		affiliated_hospital=#{affiliated_hospital},
+		hospital_number=#{hospital_number},
+		telephone=#{telephone},
+		sickbed_number=#{sickbed_number},
+		patient_number=#{patient_number},
+		outpatient_number=#{outpatient_number},
+		marital_status=#{marital_status},
+		inspection_department=#{inspection_department},
+		inspection_doctor=#{inspection_doctor},
+		delivery_date=#{delivery_date},
+		sampling_date=#{sampling_date},
+		report_doctor=#{report_doctor},
+		revisit_doctor=#{revisit_doctor},
+		area=#{area},
+		delivery_tele=#{delivery_tele},
+		order_id=#{order_id}
+		where
+		case_id=#{case_id}
+	</update>
+
+    <select id="queryCasePhoto" parameterType="map"
+            resultType="com.rds.order.model.RdsOrderAttachmentModel">
+		select a.*,u.username from tb_or_attachment a
+		left join tb_or_order o on a.order_id=o.order_id
+		left join tb_or_case_info c on c.order_id=o.order_id
+		left join tb_upc_users u on u.userid=a.upload_person
+		where c.case_id=#{case_id}  and a.state='0' and a.att_type='0' and o.state='1'
+	</select>
+
+    <select id="queryAtt" parameterType="map"
+            resultType="com.rds.order.model.RdsOrderAttachmentModel">
+		select a.*,u.username from tb_or_attachment a
+        left join tb_upc_users u ON u.userid = a.upload_person
+        where a.ocp_id=#{ocp_id}
+		and a.state=0 and
+		a.att_type=#{att_type}
+	</select>
+
+    <select id="getVerifyInfo" parameterType="map"
+            resultType="com.rds.order.model.RdsOrderVerifyModel">
+		select v.*,u.username from tb_or_verify v
+		inner join
+		tb_upc_users u
+		on v.user_id=u.userid
+		where v.ocp_id=#{ocp_id}
+	</select>
+
+    <update id="updateCaseState" parameterType="map">
+		update
+		tb_or_order_check_project
+		set case_type=#{statenum}
+		where
+		ocp_id=#{ocp_id}
+	</update>
+
+    <update id="deletAtt" parameterType="map">
+		update tb_or_attachment
+		set
+		state=1 where att_id=#{att_id}
+	</update>
+
+    <update id="deleteAttInfo" parameterType="com.rds.order.model.RdsOrderAttachmentModel">
+		update tb_or_attachment
+		set
+		state=1 where att_id=#{att_id}
+	</update>
+
+    <insert id="insertVerifyInfo" parameterType="com.rds.order.model.RdsOrderVerifyModel">
+		insert into
+		tb_or_verify
+		(verify_id,user_id,verify_time,reason,ocp_id)
+		VALUES
+		(#{verify_id},#{userid},now(),#{reason},#{ocp_id} );
+	</insert>
+
+    <insert id="insertAttInfo" parameterType="com.rds.order.model.RdsOrderAttachmentModel">
+		insert into
+		tb_or_attachment
+		(att_id,att_type,att_catalog,upload_time,upload_person,ocp_id)
+		VALUES(#{att_id},#{att_type},#{att_catalog},now(),#{upload_person},#{ocp_id})
+	</insert>
+
+    <select id="getPathByAttId" parameterType="String" resultType="String">
+		select a.att_catalog from tb_or_attachment a
+		where a.att_id=#{att_id}
+	</select>
+
+    <select id="queryIsLab" parameterType="map"
+            resultType="com.rds.order.model.RdsLaboratoryInfoModel">
+		select l.lab_id from tb_or_laboratory l
+		left join
+		tb_or_laboratory_area a
+		on l.lab_id=a.lab_id
+		left join
+		tb_or_laboratory_project p
+		on p.lab_id=l.lab_id
+		where
+		a.area_coding=#{areacode} and p.cp_id=#{cp_id}
+	</select>
+
+    <update id="saveLabAndCase" parameterType="com.rds.order.model.RdsOrderCheckProject">
+		update
+		tb_or_order_check_project set
+		lab_id=#{lab_id}
+		where ocp_id=#{ocp_id}
+	</update>
+
+    <select id="getOrderDiscountPrice" parameterType="map"
+            resultType="com.rds.order.model.RdsOrderInfoModel">
+        select o.*,u.username from tb_or_order o
+        left join tb_upc_users u
+        on u.userid=o.user_id
+        where o.state='1' and o.pay_state in('1','3')
+        <if test=" order_number !=null  and order_number != ''">
+            and o.order_number like '%${order_number}%'
+        </if>
+        <if test=" pay_source !=null  and pay_source != ''">
+            and o.pay_source like '%${pay_source}%'
+        </if>
+        <if test=" username !=null  and username != ''">
+            and o.username like '%${username}%'
+        </if>
+        <if test=" cre_time_start !=null  and cre_time_start != ''">
+            and o.cre_time &gt;= #{cre_time_start}
+        </if>
+        <if test=" cre_time_end !=null  and cre_time_end != ''">
+            and #{cre_time_end} &gt;= o.cre_time
+        </if>
+        <if test=" pay_time_start !=null  and pay_time_start != ''">
+            and o.pay_time &gt;= #{pay_time_start}
+        </if>
+        <if test=" pay_time_end !=null  and pay_time_end != ''">
+            and #{pay_time_end} &gt;= o.pay_time
+        </if>
+        ORDER BY o.cre_time desc
+        LIMIT
+        #{start},#{limit}
+    </select>
+
+    <select id="CountOrderDiscountPrice" parameterType="map"
+            resultType="int">
+        select count(*) from tb_or_order o
+        where o.state='1' and o.pay_state in('1','3')
+        <if test=" checknum  == 1">
+            and r.user_id=o.user_id
+        </if>
+        <if test="  checknum  == 2">
+            and r.hospital=u.hospital
+        </if>
+        <if test="  checknum  == 3">
+            and r.user_id is  null and r.hospital is  null
+        </if>
+        <if test=" order_number !=null  and order_number != ''">
+            and o.order_number like '%${order_number}%'
+        </if>
+        <if test=" pay_source !=null  and pay_source != ''">
+            and o.pay_source like '%${pay_source}%'
+        </if>
+        <if test=" username !=null  and username != ''">
+            and o.username like '%${username}%'
+        </if>
+        <if test=" cre_time_start !=null  and cre_time_start != ''">
+            and o.cre_time &gt;= #{cre_time_start}
+        </if>
+        <if test=" cre_time_end !=null  and cre_time_end != ''">
+            and #{cre_time_end} &gt;= o.cre_time
+        </if>
+        <if test=" pay_time_start !=null  and pay_time_start != ''">
+            and o.pay_time &gt;= #{pay_time_start}
+        </if>
+        <if test=" pay_time_end !=null  and pay_time_end != ''">
+            and #{pay_time_end} &gt;= o.pay_time
+        </if>
+    </select>
+
+
+
+
+    <select id="getSignInfo" parameterType="map"
+            resultType="com.rds.order.model.RdsOrderSignModel">
+		select * from tb_or_sample_sign s
+		where s.ocp_id=#{ocp_id} and s.state=0
+	</select>
+
+    <select id="checkOrderToPayState" parameterType="map"
+            resultType="int">
+        select count(*) from tb_or_order_check_project p
+        where p.order_id=#{order_id} and case_type!='7'
+        and ocp_id!=#{ocp_id}
+	</select>
+
+    <insert id="saveSignInfo" parameterType="com.rds.order.model.RdsOrderSignModel">
+		insert into tb_or_sample_sign
+		(ss_id,ocp_id,sample_type,sign_time,sign,ifsign,numsign,cre_time,cre_person)
+		VALUE(#{ss_id},#{ocp_id},#{sample_type},#{sign_time},#{sign},#{ifsign},#{numsign},now(),#{cre_person})
+	</insert>
+
+
+    <update id="deleteSignInfo" parameterType="com.rds.order.model.RdsOrderSignModel">
+		update tb_or_sample_sign  set state=1
+		where ss_id=#{ss_id}
+	</update>
+
+    <update id="updateOrderPayState" parameterType="map">
+       update tb_or_order o
+        set o.pay_state='3'
+        where order_id=#{order_id}
+    </update>
+
+    <select id="getOrderInfo"  resultType="com.rds.order.model.RdsOrderInfoModel">
+        select order_id from tb_or_order
+    </select>
+    <select id="queryPriceAndName" parameterType="map"
+            resultType="com.rds.order.model.RdsPersonpriceConfigureModel">
+            select * from tb_or_personprice_configure p
+            where p.balance_type='2' and p.user_id is not null and cp_id in (
+            select c.cp_id from tb_or_order o
+            left join tb_or_order_check_project c
+            on c.order_id=o.order_id
+            left join nbl_projectinfo np
+            on np.cp_id=c.cp_id
+            where o.order_id=#{order_id} and p.state='0' and c.cp_id=#{cp_id}
+            )
+    </select>
+    <select id="queryPriceAndPro" parameterType="map"
+            resultType="com.rds.order.model.RdsPersonpriceConfigureModel">
+            select * from tb_or_personprice_configure p
+            where p.balance_type='2' and p.hospital is not null and cp_id in (
+            select c.cp_id from tb_or_order o
+            left join tb_or_order_check_project c
+            on c.order_id=o.order_id
+            left join nbl_projectinfo np
+            on np.cp_id=c.cp_id
+            where o.order_id=#{order_id} and p.state='0' and c.cp_id=#{cp_id}
+            )
+    </select>
+    <select id="queryPriceAndProAndName" parameterType="map"
+            resultType="com.rds.order.model.RdsPersonpriceConfigureModel">
+       select * from tb_or_personprice_configure p
+            where p.balance_type='2' and p.hospital is  null and  p.user_id is  null  and cp_id in (
+            select c.cp_id from tb_or_order o
+            left join tb_or_order_check_project c
+            on c.order_id=o.order_id
+            left join nbl_projectinfo np
+            on np.cp_id=c.cp_id
+            where o.order_id=#{order_id} and c.cp_id=#{cp_id}   and p.state='0'
+            );
+    </select>
+
+    <select id="queryPriceByUser" parameterType="map"
+            resultType="com.rds.order.model.RdsPersonpriceConfigureModel">
+        select  p.*,c.price,n.check_project,n.check_type from tb_or_personprice_configure p
+        left join tb_or_order_check_project c on c.cp_id=p.cp_id
+        left join tb_or_order o on o.order_id=c.order_id
+        	left join nbl_projectinfo n on n.cp_id=c.cp_id
+        where c.ocp_id=#{ocp_id}
+        and o.user_id=p.user_id and p.balance_type='2' and p.state='0'
+    </select>
+
+    <select id="queryPriceByHospital" parameterType="map"
+            resultType="com.rds.order.model.RdsPersonpriceConfigureModel">
+        select  p.*,c.price,n.check_project,n.check_type from tb_or_personprice_configure p
+        left join tb_or_order_check_project c on c.cp_id=p.cp_id
+        left join tb_or_order o on o.order_id=c.order_id
+        left join tb_upc_users u on u.userid=o.user_id
+        	left join nbl_projectinfo n on n.cp_id=c.cp_id
+        where c.ocp_id=#{ocp_id}
+       and u.hospital=p.hospital and p.balance_type='2' and p.state='0'
+    </select>
+
+    <select id="queryPriceByHospitalAndUser" parameterType="map"
+            resultType="com.rds.order.model.RdsPersonpriceConfigureModel">
+         select  p.*,c.price,n.check_project,n.check_type from tb_or_personprice_configure p
+        left join tb_or_order_check_project c on c.cp_id=p.cp_id
+        left join tb_or_order o on o.order_id=c.order_id
+        left join tb_upc_users u on u.userid=o.user_id
+        	left join nbl_projectinfo n on n.cp_id=c.cp_id
+        where c.ocp_id=#{ocp_id}
+        AND p.hospital is null
+      AND p.user_id is null
+      and p.balance_type='2'
+       and p.state='0'
+    </select>
+
+    <update id="savePriceToOCP" parameterType="map">
+        update tb_or_order_check_project p
+        set p.discountprice=#{discountprice}
+        where p.ocp_id=#{ocp_id}
+    </update>
+
+    <select id="getpriceByOrder" parameterType="map"
+            resultType="Double">
+             select
+              sum(
+                case
+                when p.num>0 then num * p.discountprice
+                else p.discountprice
+                end
+                )
+             from tb_or_order_check_project p
+            where p.order_id=#{order_id}
+    </select>
+
+    <select id="getOrderCheckProInfo" parameterType="map"
+            resultType="com.rds.order.model.RdsPersonpriceConfigureModel">
+            select p.*,n.*,(
+            case
+            when p.num>0 THEN num *  p.discountprice
+            else  p.discountprice
+            end
+            )as pricee from tb_or_order_check_project p
+        LEFT JOIN nbl_projectinfo n on n.cp_id=p.cp_id where p.order_id= #{order_id}  and n.project_status='0'
+        <if test=" check_project !=null  and check_project != ''">
+            and n.check_project like '%${check_project}%'
+        </if>
+        <if test=" check_type !=null  and check_type != ''">
+            and n.check_type like '%${check_type}%'
+        </if>
+        ORDER BY n.create_time desc
+        LIMIT
+        #{start},#{limit}
+    </select>
+
+    <select id="CountOrderDiscountPriceById" parameterType="map"
+            resultType="int">
+        select  count(*) from tb_or_order_check_project p
+        LEFT JOIN nbl_projectinfo n on n.cp_id=p.cp_id where p.order_id= #{order_id}  and n.project_status='0'
+        <if test=" check_project !=null  and check_project != ''">
+            and n.check_project like '%${check_project}%'
+        </if>
+        <if test=" check_type !=null  and check_type != ''">
+            and n.check_type like '%${check_type}%'
+        </if>
+    </select>
+
+    <select id="queryOcpByOrderId" parameterType="map"
+            resultType="String">
+        select p.ocp_id from tb_or_order_check_project p
+        where p.order_id=#{order_id}
+    </select>
+
+</mapper>

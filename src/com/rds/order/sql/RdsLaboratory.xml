@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rds.order.mapper.RdsLaboratoryMapper">
+
+    <select id="getLabInfo" parameterType="map"
+            resultType="com.rds.order.model.RdsLaboratoryInfoModel">
+        select l.*,(
+        select
+        case
+        when count(*)>0
+        THEN 'true'
+        ELSE 'false'
+        END
+        from tb_or_order_check_project p
+        where p.lab_id=l.lab_id
+        <if test=" ocp_id !=null  and ocp_id != ''">
+            and p.ocp_id=#{ocp_id}
+        </if>
+        ) checked from tb_or_laboratory l
+        where 1=1
+        <if test=" name !=null  and name != ''">
+            and l.name like '%${name}%'
+        </if>
+        <if test=" affiliated_area !=null  and affiliated_area != ''">
+            and l.affiliated_area like '%${affiliated_area}%'
+        </if>
+        <if test=" res_person !=null  and res_person != ''">
+            and l.res_person like '%${res_person}%'
+        </if>
+        <if test=" res_telephone !=null  and res_telephone != ''">
+            and l.res_telephone like '%${res_telephone}%'
+        </if>
+        <if test=" laboratory_state !=null ">
+            and l.laboratory_state =#{laboratory_state}
+        </if>
+        ORDER BY l.cre_time desc
+        LIMIT
+        #{start},#{limit}
+    </select>
+
+    <select id="countLabInfo" parameterType="map" resultType="int">
+        select count(*) from tb_or_laboratory l
+        where l.laboratory_state=0
+        <if test=" name !=null  and name != ''">
+            and l.name like '%${name}%'
+        </if>
+        <if test=" affiliated_area !=null  and affiliated_area != ''">
+            and l.affiliated_area like '%${affiliated_area}%'
+        </if>
+        <if test=" res_person !=null  and res_person != ''">
+            and l.res_person like '%${res_person}%'
+        </if>
+        <if test=" res_telephone !=null  and res_telephone != ''">
+            and l.res_telephone like '%${res_telephone}%'
+        </if>
+        <if test=" laboratory_state !=null ">
+            and l.laboratory_state =#{laboratory_state}
+        </if>
+
+    </select>
+
+    <insert id="insertLabInfo" parameterType="com.rds.order.model.RdsLaboratoryInfoModel">
+		insert into
+		tb_or_laboratory
+		(lab_id,name,affiliated_area,introduce,res_person,res_telephone,remark,cre_time,cre_person)
+		VALUES(#{lab_id},#{name},#{affiliated_area},#{introduce},#{res_person},#{res_telephone},#{remark},now(),#{cre_person})
+	</insert>
+
+    <update id="updateLabInfo" parameterType="map">
+		update tb_or_laboratory
+		set
+		name=#{name},
+		affiliated_area=#{affiliated_area},
+		introduce=#{introduce},
+		res_person=#{res_person},
+		res_telephone=#{res_telephone},
+		remark=#{remark}
+		where lab_id=#{lab_id}
+	</update>
+
+    <update id="deleteLabInfo" parameterType="map">
+		update
+		tb_or_laboratory set
+		laboratory_state=1
+		where lab_id=#{lab_id}
+	</update>
+
+    <select id="getCheckProjectInfo" parameterType="map"
+            resultType="com.rds.order.model.RdsOrderCheckProject">
+		select c.cp_id,c.check_project,c.check_type,c.project_cancer_species,c.project_status,(
+		select
+		CASE
+		WHEN COUNT(*) > 0
+		THEN 'true'
+		ELSE 'false'
+		END
+		from tb_or_laboratory_project p
+		where p.cp_id=c.cp_id
+        and p.state=0 and p.lab_id=#{lab_id}
+		) checked
+		from nbl_projectinfo c
+		where  c.project_status='0'
+		ORDER BY c.create_time desc
+	</select>
+
+
+    <insert id="saveLabAndArea" parameterType="com.rds.order.model.RdsLaboratoryInfoModel">
+        insert into
+        tb_or_laboratory_area
+        (area_id,lab_id,area_coding,cre_person,cre_time)
+        VALUE
+        <foreach collection="ids" index="index" item="id" separator=",">
+            (REPLACE(UUID(), '-', ''),#{lab_id},#{id},#{cre_person},now())
+        </foreach>
+    </insert>
+
+    <insert id="saveLabAndPro" parameterType="com.rds.order.model.RdsLaboratoryInfoModel">
+        insert into
+        tb_or_laboratory_project
+        (lp_id,lab_id,cp_id,remark,cre_time,cre_person)
+        VALUE
+        <foreach collection="cp_ids" index="index" item="cp_id"
+                 separator=",">
+            (REPLACE(UUID(), '-',
+            ''),#{lab_id},#{cp_id},#{remark},now(),#{cre_person})
+        </foreach>
+    </insert>
+
+    <select id="queryExistAre" parameterType="map"
+            resultType="com.rds.order.model.RdsLaboratoryArea">
+		select l.area_coding from tb_or_laboratory_area l
+		where
+		l.area_coding=#{idss}
+		and l.lab_id=#{lab_id}
+	</select>
+
+    <select id="queryExistPro" parameterType="map"
+            resultType="com.rds.order.model.RdsLaboratoryProject">
+		select p.cp_id from tb_or_laboratory_project p
+		where
+		p.cp_id=#{cp_idss}
+		and p.lab_id=#{lab_id}
+	</select>
+
+    <select id="queryProNameById" parameterType="map"
+            resultType="com.rds.order.model.RdsOrderCheckProject">
+		select p.check_project from nbl_projectinfo p
+		where
+		p.cp_id=#{cp_idss}
+	</select>
+
+    <select id="getDicAreaInfo" parameterType="map"
+            resultType="com.rds.order.model.RdsOrderDicAreaModel">
+		SELECT
+		t.id,
+		t.name AS TEXT,
+		t.parentID AS parentId,
+		(SELECT
+		CASE
+		WHEN COUNT(*) > 0
+		THEN 'false'
+		ELSE 'true'
+		END
+		FROM
+		tb_dic_area_info a
+		WHERE a.parentID = t.id) leaf ,
+		(select
+		CASE
+		WHEN COUNT(*) > 0
+		THEN 'true'
+		ELSE 'false'
+		END
+		from tb_or_laboratory_area l
+		where l.area_coding=t.id and l.state=0
+		and l.lab_id=#{lab_id}
+		)
+		checked,(
+
+select 	CASE
+		WHEN COUNT(*) > 0
+		THEN 'true'
+		ELSE 'false'
+		END
+   from tb_or_laboratory_area a
+		where
+		(concat(left(a.area_coding,2),'0000')  =t.id  or
+		 concat(left(a.area_coding,4),'00')  =t.id)
+		and a.lab_id=#{lab_id}
+		and a.state=0
+
+) expanded
+		FROM
+		tb_dic_area_info t
+		WHERE t.parentID = #{parentID}
+	</select>
+
+    <delete id="deleteLabAndArea" parameterType="map">
+		  delete from  tb_or_laboratory_area   where lab_id=#{lab_id}
+	</delete>
+
+    <delete id="deleteLabAndPro" parameterType="map">
+		 delete from tb_or_laboratory_project  where lab_id=#{lab_id}
+	</delete>
+
+    <select id="queryAreAndPro" parameterType="map"
+            resultType="int">
+        select count(*) from tb_or_laboratory l
+        left join tb_or_laboratory_area a on a.lab_id=l.lab_id
+        left join tb_or_laboratory_project p on p.lab_id=l.lab_id
+        where
+        1=1
+        <if test=" area_coding2 !=null  and area_coding2 != ''">
+            and a.area_coding=#{area_coding2}
+        </if>
+        <if test=" cp_id2 !=null  and cp_id2 != ''">
+            and p.cp_id=#{cp_id2}
+        </if>
+
+    </select>
+
+    <select id="queryIsLab" parameterType="map"
+            resultType="com.rds.order.model.RdsLaboratoryInfoModel">
+	    select l.* from tb_or_laboratory l
+        left join tb_or_laboratory_area a on a.lab_id=l.lab_id
+        left join tb_or_laboratory_project p on p.lab_id=l.lab_id
+        where a.area_coding=#{area_coding}  and p.cp_id=#{cp_id}
+    </select>
+
+</mapper>
